@@ -212,7 +212,6 @@ END MODULE ANN
 	ENDIF
 
 
-
 	DO i = 1,nlayer-1
 		allocate(pcur%neuro(Ndata,layers(i+1)))
 		pcur => pcur%next
@@ -305,12 +304,41 @@ END MODULE ANN
  END SUBROUTINE TestANN
 !==================================================
 
-program main
-use ANN
+!==================================================
+ SUBROUTINE PostANN
+	USE ANN
+	IMPLICIT NONE
+
+	deallocate(layers)
+	deallocate(InputMean)
+	deallocate(InputVar)
+	deallocate(OutputMean)
+	deallocate(OutPutVar)
+
+        pcur => phead
+        DO
+        IF (.NOT. ASSOCIATED(pcur)) EXIT   ! exit if null pointer
+        
+	phead=>pcur%next
+	DEALLOCATE(pcur%weights)
+	DEALLOCATE(pcur%biases)
+	DEALLOCATE(pcur%neuro)
+	DEALLOCATE(pcur)
+	pcur => phead
+
+        ENDDO
+
+
+	RETURN
+ END SUBROUTINE PostANN
+!==================================================
+
+Program Main
+USE ANN
 implicit none
 
 call InitANN
 call TestANN
+call PostANN
 
-
-end program main
+END Program Main
