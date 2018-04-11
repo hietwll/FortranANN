@@ -197,11 +197,13 @@ END MODULE ANN
 
 	allocate(pzero, STAT = sflag)
 	if (sflag > 0) STOP 'Fail to allocate a new node'
-	allocate(pcur%neuro(Ndata,layers(1)))
+	allocate(pzero%neuro(Ndata,layers(1)))
 	pzero%pre => NULL()
 	pzero%next => NULL()
 
+
 	call NormInput(pzero%neuro,Xin,Ndata,layers(1))
+
 
 	phead%pre => pzero
 	
@@ -209,10 +211,13 @@ END MODULE ANN
 		pcur => phead
 	ENDIF
 
+
+
 	DO i = 1,nlayer-1
 		allocate(pcur%neuro(Ndata,layers(i+1)))
 		pcur => pcur%next
 	ENDDO
+
 
 	IF (ASSOCIATED(phead)) THEN
 		pcur => phead
@@ -220,7 +225,9 @@ END MODULE ANN
 
 	DO i = 1,nlayer-1
 		pcur%neuro = matmul(pcur%pre%neuro,pcur%weights)
+		
 		call AddBia(pcur%neuro,pcur%biases,Ndata,layers(i+1))
+
 		IF (i.lt.nlayer-1) THEN
 			call ReLu(pcur%neuro,Ndata,layers(i+1))
 			pcur => pcur%next
@@ -243,8 +250,8 @@ END MODULE ANN
 	integer rows,cols,i,j
 	real*8 RInput(rows,cols)
 
-	DO j = 1,rows
-	DO i = 1,cols
+	DO i = 1,rows
+	DO j = 1,cols
 		IF (RInput(i,j).le.0.0) THEN
 			RInput(i,j) = 0.0
 		ENDIF
@@ -268,12 +275,42 @@ END MODULE ANN
  END Subroutine AddBia
 !==================================================
 
+!==================================================
+ SUBROUTINE TestANN
+        USE ANN
+	IMPLICIT NONE
+	integer,parameter :: patch = 8
+        real*8 :: XInput(patch,12),YOut(patch,1),YOut_TF(patch,1)
+        integer i,j
+
+	OPEN(105,file='../TestTensor/xinput_tf.dat',status='unknown',form='formatted')
+	DO i = 1, patch
+		READ(105,*) XInput(i,:)
+	ENDDO
+	close(105)
+
+	OPEN(105,file='../TestTensor/yinver_tf.dat',status='unknown',form='formatted')
+	DO i = 1, patch
+		READ(105,*) YOut_TF(i,:)
+	ENDDO
+	close(105)
+
+
+        call Inference(XInput,YOut,patch)
+
+        write(*,*) YOut-YOut_TF
+
+
+	RETURN
+ END SUBROUTINE TestANN
+!==================================================
+
 program main
 use ANN
 implicit none
 
 call InitANN
-call TestScaler
+call TestANN
 
 
 end program main
