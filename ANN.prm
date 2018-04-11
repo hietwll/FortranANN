@@ -1,0 +1,6 @@
+#
+# ANN parameters
+#
+4    #nlayer
+12 60 30 1  # each layer
+../net-model-12-60-30-1
